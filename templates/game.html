@@ -86,30 +86,32 @@ if (gameArea && startGameButton) {
         document.addEventListener('keydown', handleKeyPress);
         
         // Добавляем обработчики касаний для мобильных устройств
-        let touchStartX = 0;
-        let touchEndX = 0;
-        const swipeThreshold = 30; // Минимальное расстояние для определения свайпа
+        gameArea.addEventListener('touchstart', handleTouchStart);
+        gameArea.addEventListener('touchmove', handleTouchMove);
 
-        gameArea.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-
-        gameArea.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-
-        function handleSwipe() {
+        function handleTouchStart(e) {
             if (!gameStarted) return;
+            // Предотвращаем прокрутку страницы при касании игровой области
+            e.preventDefault(); 
+            handleTouchMove(e); // Обрабатываем первое касание как движение
+        }
 
-            const swipeDistance = touchEndX - touchStartX;
-            const step = 5; // шаг движения в процентах
+        function handleTouchMove(e) {
+            if (!gameStarted) return;
+            e.preventDefault(); // Предотвращаем прокрутку страницы при движении
 
-            if (swipeDistance > swipeThreshold) { // Свайп вправо
-                playerPosition = Math.min(100, playerPosition + step);
-            } else if (swipeDistance < -swipeThreshold) { // Свайп влево
-                playerPosition = Math.max(0, playerPosition - step);
-            }
+            const touchX = e.changedTouches[0].clientX; // Получаем X-координату касания
+            const gameAreaRect = gameArea.getBoundingClientRect();
+
+            // Вычисляем новую позицию игрока относительно игровой области в процентах
+            // Корректируем позицию, чтобы центр игрока был под пальцем, и учитываем ширину игрока (условно)
+            const playerWidthPercent = 10; // Примерная ширина игрока в % от game-area, можно уточнить в CSS
+            let newPosition = ((touchX - gameAreaRect.left) / gameAreaRect.width) * 100;
+
+            // Ограничиваем позицию игрока, чтобы он не выходил за границы
+            newPosition = Math.max(playerWidthPercent / 2, Math.min(100 - playerWidthPercent / 2, newPosition));
+
+            playerPosition = newPosition; // Обновляем playerPosition
             updatePlayerPosition();
         }
 
