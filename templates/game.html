@@ -85,6 +85,34 @@ if (gameArea && startGameButton) {
         // Добавляем обработчики клавиш
         document.addEventListener('keydown', handleKeyPress);
         
+        // Добавляем обработчики касаний для мобильных устройств
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const swipeThreshold = 30; // Минимальное расстояние для определения свайпа
+
+        gameArea.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        gameArea.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (!gameStarted) return;
+
+            const swipeDistance = touchEndX - touchStartX;
+            const step = 5; // шаг движения в процентах
+
+            if (swipeDistance > swipeThreshold) { // Свайп вправо
+                playerPosition = Math.min(100, playerPosition + step);
+            } else if (swipeDistance < -swipeThreshold) { // Свайп влево
+                playerPosition = Math.max(0, playerPosition - step);
+            }
+            updatePlayerPosition();
+        }
+
         // Создаем начальное количество падающих букв
         for (let i = 0; i < maxFallingLetters; i++) {
             createFallingLetter();
@@ -249,7 +277,17 @@ if (gameArea && startGameButton) {
             } else {
                 attempts--;
                 document.getElementById('attempts-left').textContent = attempts;
-                if (attempts <= 0) {
+                collectedLetters = []; // Очищаем собранные буквы
+                updateCollectedLetters(); // Обновляем отображение
+                if (attempts > 0 && gameStarted) {
+                    // Если попытки еще есть, продолжаем игру
+                    // Убираем все текущие падающие буквы, чтобы начать новый раунд с чистым полем
+                    fallingLettersContainer.innerHTML = '';
+                    // Заново создаем нужное количество падающих букв
+                    for (let i = 0; i < maxFallingLetters; i++) {
+                        createFallingLetter();
+                    }
+                } else if (attempts === 0) {
                     gameStarted = false;
                     // Удаляем все падающие буквы при завершении игры
                     fallingLettersContainer.innerHTML = '';
@@ -274,17 +312,6 @@ if (gameArea && startGameButton) {
                          document.getElementById('start-game').disabled = false;
                          window.location.reload(); // Раскомментируем для принудительной перезагрузки
                     }, 100); // Задержка 100 мс
-
-                } else {
-                    // Если слово неверное, сбрасываем собранные буквы и продолжаем игру
-                    collectedLetters = [];
-                    updateCollectedLetters();
-                    // Удален вызов createFallingLetter здесь, так как он управляется в других местах
-
-                    // Добавляем явное создание новой буквы после сброса, если нужно
-                     if (gameStarted && fallingLettersContainer.children.length < maxFallingLetters) {
-                         createFallingLetter();
-                     }
                 }
             }
         });
