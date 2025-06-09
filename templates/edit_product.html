@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать товар{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Редактировать товар</h2>
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Название</label>
+        <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Описание</label>
+        <textarea name="description" class="form-control" required>{{ product.description }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Цена</label>
+        <input type="number" name="price" class="form-control" value="{{ product.price }}" min="0" step="0.01" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Количество</label>
+        <input type="number" name="stock" class="form-control" value="{{ product.stock }}" min="0" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">URL изображения</label>
+        <input type="url" name="image_url" class="form-control" value="{{ product.image_url }}">
+    </div>
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %} 

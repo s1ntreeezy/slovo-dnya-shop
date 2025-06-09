@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Ваша корзина</h2>
+{% if products %}
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Товар</th>
+            <th>Цена</th>
+            <th>Количество</th>
+            <th>Сумма</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in products %}
+        <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.product.price }} ₽</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ (item.product.price * item.quantity)|round(2) }} ₽</td>
+            <td><a href="{{ url_for('remove_from_cart', product_id=item.product.id) }}" class="btn btn-danger btn-sm">Удалить</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p><strong>Итого:</strong> {{ total|round(2) }} ₽</p>
+
+{% if discount_code %}
+    <div class="alert alert-success">Промокод <strong>{{ discount_code }}</strong> применён! Скидка: {{ discount }}%</div>
+{% endif %}
+
+{% if promocodes %}
+    <form method="post" action="{{ url_for('apply_promocode') }}" class="mb-3">
+        <div class="input-group">
+            <select name="promocode" class="form-select">
+                {% for promo in promocodes %}
+                    <option value="{{ promo.code }}">{{ promo.code }} ({{ promo.discount_percent }}%, до {{ promo.valid_until.strftime('%d.%m.%Y %H:%M') }})</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-success">Применить промокод</button>
+        </div>
+    </form>
+{% else %}
+    <form method="post" action="{{ url_for('apply_promocode') }}" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="promocode" class="form-control" placeholder="Введите промокод">
+            <button type="submit" class="btn btn-success">Применить промокод</button>
+        </div>
+    </form>
+{% endif %}
+
+<p><strong>Сумма с учётом скидки:</strong> {{ total_with_discount|round(2) }} ₽</p>
+
+<a href="{{ url_for('index') }}" class="btn btn-outline-primary">Продолжить покупки</a>
+{% else %}
+<div class="alert alert-info">Ваша корзина пуста</div>
+<a href="{{ url_for('index') }}" class="btn btn-primary">К товарам</a>
+{% endif %}
+{% endblock %} 

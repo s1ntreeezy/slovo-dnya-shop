@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Игра - Слово дня{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Слово дня</h3>
+            </div>
+            <div class="card-body">
+                {% if has_won_today %}
+                    <div class="alert alert-success text-center" role="alert">
+                        Вы уже получили промокод за это слово дня. Следующая игра будет доступна после обновления слова.
+                    </div>
+                {% else %}
+                    <div class="text-center mb-4">
+                        <h4>Соберите слово:</h4>
+                        <div id="target-word" class="display-4 mb-3">{{ word }}</div>
+                    </div>
+                    
+                    <div class="game-area">
+                        <div id="player" class="player"></div>
+                        <div id="falling-letters" class="falling-letters"></div>
+                    </div>
+
+                    <div id="collected-letters" class="collected-letters text-center mt-3 mb-3"></div>
+
+                    <div class="text-center mt-4">
+                        <div id="attempts" class="mb-3">
+                            <h5>Попытки: <span id="attempts-left">3</span></h5>
+                        </div>
+                        <div class="controls-info mb-3">
+                            <p>Управление: стрелки влево/вправо</p>
+                        </div>
+                        <button id="start-game" class="btn btn-primary">Начать игру</button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let attempts = 3;
+let gameStarted = false;
+let targetWord = "{{ word }}";
+let collectedLetters = [];
+let playerPosition = 50; // начальная позиция игрока в процентах
+let playerElement = null;
+let maxFallingLetters = 3; // Максимальное количество одновременно падающих букв
+let activeIntervals = []; // Массив для хранения активных интервалов
+
+// Проверяем, загрузилась ли игра (т.е. отображается ли игровая зона)
+const gameArea = document.querySelector('.game-area');
+const startGameButton = document.getElementById('start-game');
+const fallingLettersContainer = document.getElementById('falling-letters');
+
+if (gameArea && startGameButton) {
+    startGameButton.addEventListener('click', startGame);
+
+    function startGame() {
+        if (gameStarted) return;
+        gameStarted = true;
+        startGameButton.disabled = true;
+        
+        // Удаляем старого игрока, если он есть
+        const oldPlayer = document.getElementById('player');
+        if (oldPlayer) oldPlayer.remove();
+        playerElement = document.createElement('div');
+        playerElement.className = 'player';
+        playerElement.id = 'player';
+        gameArea.appendChild(playerElement);
+        playerPosition = 50;
+        updatePlayerPosition();
+        
+        // Очищаем собранные буквы и падающие буквы
+        collectedLetters = [];
+        updateCollectedLetters();
+        fallingLettersContainer.innerHTML = ''; // Очищаем контейнер падающих букв
+        
+        // Добавляем обработчики клавиш
+        document.addEventListener('keydown', handleKeyPress);
+        
+        // Создаем начальное количество падающих букв
+        for (let i = 0; i < maxFallingLetters; i++) {
+            createFallingLetter();
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (!gameStarted) return;
+        
+        const step = 5; // шаг движения в процентах
+        
+        if (e.key === 'ArrowLeft') {
+            playerPosition = Math.max(0, playerPosition - step);
+        } else if (e.key === 'ArrowRight') {
+            playerPosition = Math.min(100, playerPosition + step);
+        }
+        
+        updatePlayerPosition();
+    }
+
+    function updatePlayerPosition() {
+        if (playerElement) {
+            playerElement.style.left = playerPosition + '%';
+            playerElement.style.transform = 'translateX(-50%)';
+        }
+    }
+
+    function createFallingLetter() {
+        if (!gameStarted) return;
+        
+        const letter = document.createElement('div');
+        letter.className = 'falling-letter';
+        
+        // Увеличиваем вероятность появления нужных букв
+        const targetLetterCounts = {};
+        targetWord.split('').forEach(l => {
+            targetLetterCounts[l] = (targetLetterCounts[l] || 0) + 1;
+        });
+
+        const collectedLetterCounts = {};
+        collectedLetters.forEach(l => {
+            collectedLetterCounts[l] = (collectedLetterCounts[l] || 0) + 1;
+        });
+
+        const neededLettersList = [];
+        for (const char in targetLetterCounts) {
+            const neededCount = targetLetterCounts[char] - (collectedLetterCounts[char] || 0);
+            for (let i = 0; i < neededCount; i++) {
+                neededLettersList.push(char);
+            }
+        }
+        
+        let letterContent;
+        const randomChance = Math.random();
+
+        if (neededLettersList.length > 0 && randomChance < 0.8) { // Увеличиваем шанс нужной буквы до 80%
+             // Выбираем случайную букву из списка нужных
+            letterContent = neededLettersList[Math.floor(Math.random() * neededLettersList.length)];
+        } else {
+            // В оставшихся 20% случаев или если все буквы собраны, генерируем случайную букву
+            letterContent = getRandomLetter();
+        }
+
+        letter.textContent = letterContent;
+
+        letter.style.left = Math.random() * 80 + 10 + '%';
+        
+        fallingLettersContainer.appendChild(letter);
+        
+        const duration = 3000 + Math.random() * 2000;
+        letter.style.animation = `fall ${duration}ms linear`;
+        
+        // Удаляем букву после падения
+        letter.addEventListener('animationend', () => {
+            letter.remove();
+            // Создаем новую букву, если текущее количество меньше максимального
+            if (gameStarted && fallingLettersContainer.children.length < maxFallingLetters) {
+                 createFallingLetter();
+            }
+        });
+        
+        // Проверяем столкновение с игроком
+        const checkCollision = setInterval(() => {
+            if (!letter.parentElement) {
+                clearInterval(checkCollision);
+                return;
+            }
+            
+            const letterRect = letter.getBoundingClientRect();
+            const playerRect = playerElement.getBoundingClientRect();
+            
+            if (isColliding(letterRect, playerRect)) {
+                clearInterval(checkCollision);
+
+                // --- Логика добавления и проверки завершения слова или неверного слова ---
+                collectedLetters.push(letter.textContent);
+                updateCollectedLetters();
+                letter.remove(); // Удаляем собранную букву
+
+                // Вызываем checkWord, если собрано количество букв, равное длине целевого слова
+                if (collectedLetters.length === targetWord.length) {
+                    // Все нужные буквы собраны или собран набор букв той же длины
+                    checkWord(); // Вызываем проверку на сервере
+                } else {
+                    // Слово еще не собрано, создаем следующую букву (если нужно)
+                    if (gameStarted) {
+                         // Проверяем, нужно ли создать новую букву, если текущих меньше максимального
+                        if (document.getElementById('falling-letters').children.length < maxFallingLetters) {
+                             createFallingLetter();
+                        }
+                    }
+                }
+                // --- Конец логики ---
+            }
+        }, 50);
+
+        // Добавляем интервал в список активных
+        activeIntervals.push(checkCollision);
+    }
+
+    function isColliding(rect1, rect2) {
+        return !(rect1.right < rect2.left || 
+                 rect1.left > rect2.right || 
+                 rect1.bottom < rect2.top || 
+                 rect1.top > rect2.bottom);
+    }
+
+    function getRandomLetter() {
+        const letters = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+        return letters[Math.floor(Math.random() * letters.length)];
+    }
+
+    function updateCollectedLetters() {
+        const container = document.getElementById('collected-letters');
+        if (container) { // Добавлена проверка на существование контейнера
+            container.textContent = collectedLetters.join('');
+        }
+    }
+
+    function checkWord() {
+        const userWord = collectedLetters.join('');
+        fetch('/check_word', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ word: userWord })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                gameStarted = false;
+                 // Удаляем все падающие буквы при завершении игры
+                fallingLettersContainer.innerHTML = '';
+                document.removeEventListener('keydown', handleKeyPress);
+                if (playerElement) {
+                    playerElement.remove();
+                }
+                alert(data.message + '\nВаш промокод: ' + data.promocode);
+                // Перезагружаем страницу, чтобы обновить состояние игры и сообщение о выигрыше
+                window.location.reload();
+            } else {
+                attempts--;
+                document.getElementById('attempts-left').textContent = attempts;
+                if (attempts <= 0) {
+                    gameStarted = false;
+                    // Удаляем все падающие буквы при завершении игры
+                    fallingLettersContainer.innerHTML = '';
+                    document.removeEventListener('keydown', handleKeyPress);
+                    if (playerElement) {
+                        playerElement.remove();
+                    }
+                    // Очищаем все активные интервалы
+                    activeIntervals.forEach(interval => clearInterval(interval));
+                    activeIntervals = []; // Очищаем массив
+
+                    // Добавляем явное удаление всех падающих букв перед alert
+                    const remainingLetters = document.querySelectorAll('.falling-letter');
+                    remainingLetters.forEach(letter => {
+                        letter.style.animation = 'none'; // Останавливаем анимацию
+                        letter.remove(); // Удаляем элемент
+                    });
+
+                    // Добавляем небольшую задержку перед показом alert
+                    setTimeout(() => {
+                         alert('Игра окончена! Попробуйте завтра.');
+                         document.getElementById('start-game').disabled = false;
+                         window.location.reload(); // Раскомментируем для принудительной перезагрузки
+                    }, 100); // Задержка 100 мс
+
+                } else {
+                    // Если слово неверное, сбрасываем собранные буквы и продолжаем игру
+                    collectedLetters = [];
+                    updateCollectedLetters();
+                    // Удален вызов createFallingLetter здесь, так как он управляется в других местах
+
+                    // Добавляем явное создание новой буквы после сброса, если нужно
+                     if (gameStarted && fallingLettersContainer.children.length < maxFallingLetters) {
+                         createFallingLetter();
+                     }
+                }
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

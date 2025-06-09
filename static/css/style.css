@@ -1,0 +1,153 @@
+.game-area {
+    position: relative;
+    height: 400px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.player {
+    position: absolute;
+    bottom: 20px;
+    width: 60px;
+    height: 20px;
+    background-color: #0d6efd;
+    border-radius: 10px;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.falling-letters {
+    position: relative;
+    height: 100%;
+}
+
+.falling-letter {
+    position: absolute;
+    top: -50px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #0d6efd;
+    user-select: none;
+    padding: 10px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.1s;
+}
+
+.falling-letter:hover {
+    transform: scale(1.1);
+}
+
+.collected-letters {
+    font-size: 24px;
+    font-weight: bold;
+    color: #198754;
+    background-color: rgba(255,255,255,0.9);
+    padding: 5px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-top: 15px;
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
+@keyframes fall {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(450px);
+    }
+}
+
+.card {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: contain;
+    width: 100%;
+    display: block;
+    margin: 0 auto;
+}
+
+.card-body {
+    flex-grow: 1;
+}
+
+.navbar {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.btn {
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.alert {
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.controls-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Footer styles */
+.footer {
+    margin-top: 30px;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+.footer h6 {
+    color: #fff;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.footer p {
+    color: #adb5bd;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 0;
+}
+
+.footer .social-links a {
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer .social-links a:hover {
+    color: #0d6efd !important;
+}
+
+.footer hr {
+    border-color: rgba(255,255,255,0.1);
+    margin: 0.5rem 0;
+}
+
+/* Make sure footer stays at bottom */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    flex: 1;
+} 

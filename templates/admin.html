@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Установить слово дня</h3>
+            </div>
+            <div class="card-body">
+                <form id="word-form">
+                    <div class="mb-3">
+                        <label for="word" class="form-label">Слово</label>
+                        <input type="text" class="form-control" id="word" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="discount" class="form-label">Скидка (%)</label>
+                        <input type="number" class="form-control" id="discount" min="1" max="99" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valid_hours" class="form-label">Срок действия (часы)</label>
+                        <input type="number" class="form-control" id="valid_hours" min="1" value="24" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Установить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Добавить товар</h3>
+            </div>
+            <div class="card-body">
+                <form id="product-form">
+                    <div class="mb-3">
+                        <label for="product-name" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="product-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="product-description" class="form-label">Описание</label>
+                        <textarea class="form-control" id="product-description" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="product-price" class="form-label">Цена</label>
+                        <input type="number" class="form-control" id="product-price" min="0" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="product-stock" class="form-label">Количество</label>
+                        <input type="number" class="form-control" id="product-stock" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="product-image" class="form-label">URL изображения</label>
+                        <input type="url" class="form-control" id="product-image">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить товар</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{{ url_for('admin_products') }}" class="btn btn-outline-primary mt-4">Управление товарами</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('word-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        word: document.getElementById('word').value,
+        discount: parseInt(document.getElementById('discount').value),
+        valid_hours: parseInt(document.getElementById('valid_hours').value)
+    };
+    
+    fetch('/admin/set_word', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Слово дня успешно установлено!');
+            this.reset();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    });
+});
+
+document.getElementById('product-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        name: document.getElementById('product-name').value,
+        description: document.getElementById('product-description').value,
+        price: parseFloat(document.getElementById('product-price').value),
+        stock: parseInt(document.getElementById('product-stock').value),
+        image_url: document.getElementById('product-image').value
+    };
+    
+    fetch('/admin/add_product', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Товар успешно добавлен!');
+            this.reset();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    });
+});
+</script>
+{% endblock %} 

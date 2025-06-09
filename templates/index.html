@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="text-center mb-4">Добро пожаловать в наш магазин!</h1>
+        {% if current_user.is_authenticated %}
+            <div class="alert alert-info text-center">
+                <h4>Сыграйте в игру и получите скидку!</h4>
+                <p>Соберите слово дня и получите промокод на скидку</p>
+                <a href="{{ url_for('game') }}" class="btn btn-primary">Играть</a>
+            </div>
+        {% else %}
+            <div class="alert alert-warning text-center">
+                <h4>Войдите в аккаунт, чтобы получить доступ к игре!</h4>
+                <p>Зарегистрируйтесь или войдите, чтобы начать играть и получать скидки</p>
+                <a href="{{ url_for('login') }}" class="btn btn-primary">Войти</a>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-primary">Регистрация</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <h2 class="text-center mb-4">Наши товары</h2>
+    {% for product in products %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text">{{ product.description }}</p>
+                <p class="card-text"><strong>Цена: {{ product.price }} ₽</strong></p>
+                <p class="card-text">В наличии: {{ product.stock }} шт.</p>
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-primary">В корзину</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

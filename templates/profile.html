@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Личный кабинет</h2>
+
+<h4>Ваши промокоды</h4>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Промокод</th>
+            <th>Скидка (%)</th>
+            <th>Действует до</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for promo in promocodes %}
+        <tr>
+            <td><strong>{{ promo.code }}</strong></td>
+            <td>{{ promo.discount_percent }}%</td>
+            <td>{{ promo.local_valid_until.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>
+                {% if promo.is_used %}
+                    <span class="badge bg-secondary">Использован</span>
+                {% elif promo.local_valid_until < now %}
+                    <span class="badge bg-danger">Истёк</span>
+                {% else %}
+                    <span class="badge bg-success">Активен</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4" class="text-center">У вас пока нет промокодов</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="/cart" class="btn btn-primary mt-3">Перейти в корзину</a>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %} 
