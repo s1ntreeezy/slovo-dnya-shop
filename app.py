@@ -20,6 +20,55 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Функция для очистки истёкших промокодов
+def cleanup_expired_promocodes():
+    """Удаляет все истёкшие промокоды из базы данных"""
+    try:
+        expired_promocodes = Promocode.query.filter(
+            Promocode.valid_until < datetime.utcnow()
+        ).all()
+        
+        for promocode in expired_promocodes:
+            db.session.delete(promocode)
+        
+        if expired_promocodes:
+            db.session.commit()
+            print(f"Удалено {len(expired_promocodes)} истёкших промокодов")
+        
+        return len(expired_promocodes)
+    except Exception as e:
+        print(f"Ошибка при очистке промокодов: {e}")
+        db.session.rollback()
+        return 0
+
+# Функция для очистки истёкших слов дня
+def cleanup_expired_words():
+    """Удаляет все истёкшие слова дня из базы данных"""
+    try:
+        expired_words = WordOfTheDay.query.filter(
+            WordOfTheDay.valid_until < datetime.utcnow()
+        ).all()
+        
+        for word in expired_words:
+            db.session.delete(word)
+        
+        if expired_words:
+            db.session.commit()
+            print(f"Удалено {len(expired_words)} истёкших слов дня")
+        
+        return len(expired_words)
+    except Exception as e:
+        print(f"Ошибка при очистке слов дня: {e}")
+        db.session.rollback()
+        return 0
+
+# Функция для очистки всех истёкших данных
+def cleanup_expired_data():
+    """Очищает все истёкшие данные (промокоды и слова дня)"""
+    promocodes_cleaned = cleanup_expired_promocodes()
+    words_cleaned = cleanup_expired_words()
+    return promocodes_cleaned, words_cleaned
+
 # Создание базы данных и админа при первом запуске
 def init_db():
     with app.app_context():
@@ -79,6 +128,8 @@ def logout():
 # Главная страница
 @app.route('/')
 def index():
+    # Автоматическая очистка истёкших данных при каждом запросе к главной странице
+    cleanup_expired_data()
     products = Product.query.all()
     return render_template('index.html', products=products)
 
@@ -86,6 +137,8 @@ def index():
 @app.route('/game')
 @login_required
 def game():
+    # Очистка истёкших данных перед игрой
+    cleanup_expired_data()
     word_of_day = WordOfTheDay.query.order_by(WordOfTheDay.created_at.desc()).first()
     if not word_of_day or word_of_day.valid_until < datetime.utcnow():
         flash('Слово дня еще не установлено или срок его действия истек')
@@ -103,6 +156,8 @@ def game():
 @app.route('/check_word', methods=['POST'])
 @login_required
 def check_word():
+    # Очистка истёкших данных перед проверкой
+    cleanup_expired_data()
     data = request.get_json()
     user_word = data.get('word', '')
     word_of_day = WordOfTheDay.query.order_by(WordOfTheDay.created_at.desc()).first()
@@ -200,6 +255,8 @@ def add_product():
 @app.route('/profile')
 @login_required
 def profile():
+    # Очистка истёкших данных перед показом профиля
+    cleanup_expired_data()
     promocodes = Promocode.query.filter_by(user_id=current_user.id).order_by(Promocode.created_at.desc()).all()
     now = datetime.utcnow()
     # Переводим все даты в московское время (UTC+3)
@@ -217,6 +274,8 @@ def save_cart(cart):
 @app.route('/cart')
 @login_required
 def cart():
+    # Очистка истёкших данных перед показом корзины
+    cleanup_expired_data()
     cart = get_cart()
     products = []
     total = 0
@@ -260,6 +319,8 @@ def remove_from_cart(product_id):
 @app.route('/apply_promocode', methods=['POST'])
 @login_required
 def apply_promocode():
+    # Очистка истёкших данных перед применением промокода
+    cleanup_expired_data()
     code = request.form.get('promocode')
     promo = Promocode.query.filter_by(code=code, user_id=current_user.id, is_used=False).first()
     if promo and promo.valid_until > datetime.utcnow():
@@ -275,6 +336,8 @@ def admin_products():
     if not current_user.is_admin:
         flash('У вас нет доступа к этой странице')
         return redirect(url_for('index'))
+    # Очистка истёкших данных перед показом товаров
+    cleanup_expired_data()
     products = Product.query.order_by(Product.id.desc()).all()
     return render_template('admin_products.html', products=products)
 
@@ -307,6 +370,20 @@ def delete_product(product_id):
     db.session.commit()
     flash('Товар удалён')
     return redirect(url_for('admin_products'))
+
+@app.route('/admin/cleanup_expired', methods=['POST'])
+@login_required
+def admin_cleanup_expired():
+    """Ручная очистка истёкших данных через админ-панель"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Доступ запрещен'})
+    
+    try:
+        promocodes_cleaned, words_cleaned = cleanup_expired_data()
+        message = f"Очистка завершена. Удалено промокодов: {promocodes_cleaned}, слов дня: {words_cleaned}"
+        return jsonify({'success': True, 'message': message})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Ошибка при очистке: {str(e)}'})
 
 if __name__ == '__main__':
     init_db()

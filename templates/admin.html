@@ -62,6 +62,24 @@
         </div>
     </div>
 </div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Очистка данных</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Удалить все истёкшие промокоды и слова дня из базы данных.</p>
+                <button type="button" class="btn btn-warning" id="cleanup-btn">
+                    <i class="fas fa-trash"></i> Очистить истёкшие данные
+                </button>
+                <div id="cleanup-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <a href="{{ url_for('admin_products') }}" class="btn btn-outline-primary mt-4">Управление товарами</a>
 {% endblock %}
 
@@ -121,6 +139,37 @@ document.getElementById('product-form').addEventListener('submit', function(e) {
             alert('Ошибка: ' + data.message);
         }
     });
+});
+
+document.getElementById('cleanup-btn').addEventListener('click', function() {
+    if (confirm('Вы уверены, что хотите удалить все истёкшие промокоды и слова дня?')) {
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Очистка...';
+        
+        fetch('/admin/cleanup_expired', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultDiv = document.getElementById('cleanup-result');
+            if (data.success) {
+                resultDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="alert alert-danger">Ошибка: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            const resultDiv = document.getElementById('cleanup-result');
+            resultDiv.innerHTML = `<div class="alert alert-danger">Ошибка сети: ${error}</div>`;
+        })
+        .finally(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-trash"></i> Очистить истёкшие данные';
+        });
+    }
 });
 </script>
 {% endblock %} 
