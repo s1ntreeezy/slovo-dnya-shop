@@ -1,11 +1,11 @@
 .game-area {
     position: relative;
-    height: 400px;
+    height: 250px;
     background-color: #f8f9fa;
     border-radius: 8px;
     overflow: hidden;
     margin: 20px 0;
-    max-height: 400px;      /* добавь эту строку */
+    max-height: 250px;      /* добавь эту строку */
 }
 
 .player {
@@ -73,7 +73,7 @@
         transform: translateY(0);
     }
     to {
-        transform: translateY(380px);
+        transform: translateY(230px);
     }
 }
 
