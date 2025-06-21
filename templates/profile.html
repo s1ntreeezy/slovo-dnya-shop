@@ -24,10 +24,10 @@
             <td>
                 {% if promo.is_used %}
                     <span class="badge bg-secondary">Использован</span>
-                {% elif promo.local_valid_until < now %}
-                    <span class="badge bg-danger">Истёк</span>
-                {% else %}
+                {% elif promo.local_valid_until > now %}
                     <span class="badge bg-success">Активен</span>
+                {% else %}
+                    <span class="badge bg-danger">Истёк</span>
                 {% endif %}
             </td>
         </tr>
