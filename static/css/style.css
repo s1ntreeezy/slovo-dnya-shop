@@ -26,15 +26,20 @@
 .falling-letter {
     position: absolute;
     top: -50px;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: bold;
     color: #0d6efd;
     user-select: none;
-    padding: 10px;
+    width: 38px;
+    height: 38px;
+    line-height: 38px;
+    text-align: center;
+    padding: 0;
     background-color: white;
     border-radius: 50%;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     transition: transform 0.1s;
+    z-index: 10;
 }
 
 .falling-letter:hover {
@@ -51,8 +56,11 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     margin-top: 15px;
     display: inline-block;
-    max-width: 100%;
-    overflow-wrap: break-word;
+    max-width: 320px;
+    min-width: 80px;
+    overflow-x: auto;
+    white-space: nowrap;
+    text-align: center;
 }
 
 @keyframes fall {

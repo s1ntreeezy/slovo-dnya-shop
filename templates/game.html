@@ -180,7 +180,19 @@ if (gameArea && startGameButton) {
 
         letter.textContent = letterContent;
 
-        letter.style.left = Math.random() * 80 + 10 + '%';
+        // Получаем уже занятые позиции
+const existingLetters = Array.from(fallingLettersContainer.children);
+let left;
+let attempts = 0;
+do {
+    left = Math.random() * 80 + 10; // 10% - 90%
+    attempts++;
+    // Проверяем, не слишком ли близко к другим буквам
+} while (existingLetters.some(el => {
+    const elLeft = parseFloat(el.style.left);
+    return Math.abs(elLeft - left) < 12; // минимальное расстояние между буквами (в процентах)
+}) && attempts < 20);
+letter.style.left = left + '%';
         
         fallingLettersContainer.appendChild(letter);
         
