@@ -5,6 +5,7 @@
     border-radius: 8px;
     overflow: hidden;
     margin: 20px 0;
+    max-height: 400px;      /* добавь эту строку */
 }
 
 .player {
@@ -19,8 +20,12 @@
 }
 
 .falling-letters {
-    position: relative;
+    position: absolute;     /* измени с relative на absolute */
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
+    pointer-events: none;
 }
 
 .falling-letter {
