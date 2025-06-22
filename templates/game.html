@@ -170,12 +170,21 @@ if (gameArea && startGameButton) {
         let letterContent;
         const randomChance = Math.random();
 
-        if (neededLettersList.length > 0 && randomChance < 0.8) { // Увеличиваем шанс нужной буквы до 80%
-             // Выбираем случайную букву из списка нужных
-            letterContent = neededLettersList[Math.floor(Math.random() * neededLettersList.length)];
+        // С вероятностью 80% генерируем случайную букву, чтобы усложнить игру
+        if (neededLettersList.length > 0 && randomChance < 0.8) {
+            // Генерируем случайную букву, которой нет в списке нужных
+            let randomLetter;
+            do {
+                randomLetter = getRandomLetter();
+            } while (neededLettersList.includes(randomLetter));
+            letterContent = randomLetter;
         } else {
-            // В оставшихся 20% случаев или если все буквы собраны, генерируем случайную букву
-            letterContent = getRandomLetter();
+            // В оставшихся 20% случаев или если все буквы собраны, генерируем нужную букву
+            if (neededLettersList.length > 0) {
+                letterContent = neededLettersList[Math.floor(Math.random() * neededLettersList.length)];
+            } else {
+                letterContent = getRandomLetter();
+            }
         }
 
         letter.textContent = letterContent;
