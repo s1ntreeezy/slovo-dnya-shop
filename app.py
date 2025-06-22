@@ -371,20 +371,6 @@ def delete_product(product_id):
     flash('Товар удалён')
     return redirect(url_for('admin_products'))
 
-@app.route('/admin/cleanup_expired', methods=['POST'])
-@login_required
-def admin_cleanup_expired():
-    """Ручная очистка истёкших данных через админ-панель"""
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Доступ запрещен'})
-    
-    try:
-        promocodes_cleaned, words_cleaned = cleanup_expired_data()
-        message = f"Очистка завершена. Удалено промокодов: {promocodes_cleaned}, слов дня: {words_cleaned}"
-        return jsonify({'success': True, 'message': message})
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Ошибка при очистке: {str(e)}'})
-
 if __name__ == '__main__':
     init_db()
     app.run(debug=True) 
