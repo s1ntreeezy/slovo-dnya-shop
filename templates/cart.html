@@ -5,6 +5,7 @@
 {% block content %}
 <h2 class="mb-4">Ваша корзина</h2>
 {% if products %}
+<div class="table-responsive">
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -27,6 +28,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 <p><strong>Итого:</strong> {{ total|round(2) }} ₽</p>
 
 {% if discount_code %}
