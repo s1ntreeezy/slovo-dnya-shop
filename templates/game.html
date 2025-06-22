@@ -41,6 +41,7 @@
         </div>
     </div>
 </div>
+<audio id="game-audio" src="{{ url_for('static', filename='audio/game-music.mp3') }}" preload="auto"></audio>
 {% endblock %}
 
 {% block scripts %}
@@ -58,6 +59,7 @@ let activeIntervals = []; // Массив для хранения активны
 const gameArea = document.querySelector('.game-area');
 const startGameButton = document.getElementById('start-game');
 const fallingLettersContainer = document.getElementById('falling-letters');
+const audioElement = document.getElementById('game-audio');
 
 if (gameArea && startGameButton) {
     startGameButton.addEventListener('click', startGame);
@@ -88,6 +90,12 @@ if (gameArea && startGameButton) {
         // Добавляем обработчики касаний для мобильных устройств
         gameArea.addEventListener('touchstart', handleTouchStart);
         gameArea.addEventListener('touchmove', handleTouchMove);
+
+        // Воспроизведение музыки
+        if (audioElement) {
+            audioElement.currentTime = 0;
+            audioElement.play();
+        }
 
         function handleTouchStart(e) {
             if (!gameStarted) return;
@@ -297,6 +305,11 @@ letter.style.left = left + '%';
                 alert(data.message + '\nВаш промокод: ' + data.promocode);
                 // Перезагружаем страницу, чтобы обновить состояние игры и сообщение о выигрыше
                 window.location.reload();
+                // Остановить музыку
+                if (audioElement) {
+                    audioElement.pause();
+                    audioElement.currentTime = 0;
+                }
             } else {
                 attempts--;
                 document.getElementById('attempts-left').textContent = attempts;
@@ -334,10 +347,26 @@ letter.style.left = left + '%';
                          alert('Игра окончена! Попробуйте завтра.');
                          document.getElementById('start-game').disabled = false;
                          window.location.reload(); // Раскомментируем для принудительной перезагрузки
+                         // Остановить музыку
+                         if (audioElement) {
+                             audioElement.pause();
+                             audioElement.currentTime = 0;
+                         }
                     }, 100); // Задержка 100 мс
                 }
             }
         });
+    }
+
+    function endGame() {
+        gameStarted = false;
+        startGameButton.disabled = false;
+        // ... существующая логика завершения игры ...
+        // Остановить музыку
+        if (audioElement) {
+            audioElement.pause();
+            audioElement.currentTime = 0;
+        }
     }
 }
 </script>
