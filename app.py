@@ -289,9 +289,12 @@ def cart():
     applied_code = session.get('applied_promocode')
     discount = 0
     discount_code = None
+    # Проверяем, не истёк ли или не использован ли промокод, и очищаем из сессии если нужно
     if applied_code:
-        promo = Promocode.query.filter_by(code=applied_code, user_id=current_user.id, is_used=False).first()
-        if promo and promo.valid_until > datetime.utcnow():
+        promo = Promocode.query.filter_by(code=applied_code, user_id=current_user.id).first()
+        if not promo or promo.is_used or promo.valid_until <= datetime.utcnow():
+            session.pop('applied_promocode', None)
+        else:
             discount = promo.discount_percent
             discount_code = promo.code
     total_with_discount = total * (1 - discount / 100)
@@ -325,9 +328,11 @@ def apply_promocode():
     promo = Promocode.query.filter_by(code=code, user_id=current_user.id, is_used=False).first()
     if promo and promo.valid_until > datetime.utcnow():
         session['applied_promocode'] = code
-        flash(f'Промокод {code} применён!')
+        promo.is_used = True
+        db.session.commit()
+        flash(f'Промокод {code} применён и больше не может быть использован!')
     else:
-        flash('Промокод недействителен или истёк')
+        flash('Промокод недействителен, истёк или уже использован')
     return redirect(url_for('cart'))
 
 @app.route('/admin/products')
