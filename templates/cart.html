@@ -29,18 +29,18 @@
     </tbody>
 </table>
 </div>
-<p><strong>Итого:</strong> {{ total|round(2) }} ₽</p>
+<p><strong>Итого:</strong> <span id="cart-total">{{ total|round(2) }}</span> ₽</p>
 
 {% if discount_code %}
     <div class="alert alert-success">Промокод <strong>{{ discount_code }}</strong> применён! Скидка: {{ discount }}%</div>
 {% endif %}
 
 {% if promocodes %}
-    <form method="post" action="{{ url_for('apply_promocode') }}" class="mb-3">
+    <form method="post" action="{{ url_for('apply_promocode') }}" class="mb-3" id="promocode-form">
         <div class="input-group">
-            <select name="promocode" class="form-select">
+            <select name="promocode" class="form-select" id="promocode-select" data-total="{{ total }}">
                 {% for promo in promocodes %}
-                    <option value="{{ promo.code }}">{{ promo.code }} ({{ promo.discount_percent }}%, до {{ promo.valid_until.strftime('%d.%m.%Y %H:%M') }})</option>
+                    <option value="{{ promo.code }}" data-discount="{{ promo.discount_percent }}">{{ promo.code }} ({{ promo.discount_percent }}%, до {{ promo.valid_until.strftime('%d.%m.%Y %H:%M') }})</option>
                 {% endfor %}
             </select>
             <button type="submit" class="btn btn-success">Применить промокод</button>
@@ -55,7 +55,24 @@
     </form>
 {% endif %}
 
-<p><strong>Сумма с учётом скидки:</strong> {{ total_with_discount|round(2) }} ₽</p>
+<p><strong>Сумма с учётом скидки:</strong> <span id="total-with-discount">{{ total_with_discount|round(2) }}</span> ₽</p>
+
+<script>
+// Динамический пересчёт суммы с учётом скидки
+const promocodeSelect = document.getElementById('promocode-select');
+const totalWithDiscount = document.getElementById('total-with-discount');
+const cartTotal = document.getElementById('cart-total');
+if (promocodeSelect && totalWithDiscount && cartTotal) {
+    promocodeSelect.addEventListener('change', function() {
+        const discount = parseFloat(promocodeSelect.options[promocodeSelect.selectedIndex].dataset.discount || '0');
+        const total = parseFloat(promocodeSelect.dataset.total || '0');
+        const discounted = total * (1 - discount / 100);
+        totalWithDiscount.textContent = discounted.toFixed(2);
+    });
+    // Триггерим событие при загрузке, чтобы сразу показать сумму для первого промокода
+    promocodeSelect.dispatchEvent(new Event('change'));
+}
+</script>
 
 <a href="{{ url_for('index') }}" class="btn btn-outline-primary">Продолжить покупки</a>
 {% else %}
